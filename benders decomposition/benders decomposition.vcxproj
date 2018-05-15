@@ -135,17 +135,24 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;IL_STD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>false</SDLCheck>
+      <AdditionalIncludeDirectories>D:\cplex\concert\include;D:\cplex\cplex\include;C:\gurobi752\win64\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>D:\cplex\cplex\lib\x64_windows_vs2015\stat_mda\ilocplex.lib;D:\cplex\concert\lib\x64_windows_vs2015\stat_mda\concert.lib;D:\cplex\cplex\lib\x64_windows_vs2015\stat_mda\cplex1271.lib;C:\gurobi752\win64\lib\gurobi_c++md2015.lib;C:\gurobi752\win64\lib\gurobi75.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="bender_next.cpp" />
+    <ClCompile Include="single.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="data.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
