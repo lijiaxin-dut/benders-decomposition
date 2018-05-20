@@ -1,12 +1,15 @@
 #include "gurobi_c++.h"
 #include<iostream>
 #include<vector>
+#include<list>
+#include<iterator>
 #include"data.h"
 using namespace std;
 
 void build_single_model() {
 	my_data data;
 	data.read_data();
+
 	try {
 		GRBEnv env = GRBEnv();
 		GRBModel model = GRBModel(env);
@@ -65,6 +68,10 @@ void build_single_model() {
 
 }
 
+//
 //int main() {
+//
 //	build_single_model();
+//
+//
 //}

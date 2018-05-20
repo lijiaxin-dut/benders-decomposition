@@ -10,7 +10,7 @@ public:
 	GRBEnv env = GRBEnv();//enviroiment
 	GRBModel master = GRBModel(env);
 	GRBModel sub_problem = GRBModel(env);
-	GRBLinExpr subobj=0;//子问题目标函数
+	GRBLinExpr partial_subobj=0;//子问题不变的部分目标函数
 	//对偶变量
 	GRBVar *u;//资源约束对偶变量
 	GRBVar *v;//需求约束对偶变量
@@ -23,12 +23,12 @@ public:
 	GRBVar **y;//主问题的变量
 	GRBVar sub_cost;//子问题的目标函数,对应主问题的q
 	vector<vector<int>>y_1;//子问题初始y的值
-	double UB;
-	double LB;
+	double UB;//上界
+	double LB;//下界
 	benders_next(my_data datas) {
 		this->datas = datas;
 	}
-	/*~benders_next() {
+	~benders_next() {
 		delete u;
 		delete v;
 		for (int i = 0; i < datas.source_size; i++)
@@ -38,7 +38,7 @@ public:
 		}
 		delete[]w;
 		delete[]y;
-	}*/
+	}
 	void create_model() {
 		try {
 			y_1 = vector<vector<int>>(datas.source_size, vector<int>(datas.demand_size, 1));
@@ -61,7 +61,7 @@ public:
 			}
 			x_num= vector<vector<double>>(datas.source_size, vector<double>(datas.demand_size, 0));
 			//添加参数
-			sub_cost = master.addVar(0.0, INT_MAX, 0, GRB_CONTINUOUS, "sub cost");
+			sub_cost = master.addVar(0.0, INFINITY, 0, GRB_CONTINUOUS, "sub cost");
 			for (int i = 0; i < datas.source_size; i++) {
 				u[i] = sub_problem.addVar(0, INFINITY,0, GRB_CONTINUOUS, "u_" + to_string(i));
 			}
@@ -84,25 +84,24 @@ public:
 			master.setObjective((master_obj + sub_cost),GRB_MINIMIZE);
 			//子问题
 			//子问题目标函数
-			GRBLinExpr sub_object = 0;
+			GRBLinExpr subobj = 0;
 			for (int i = 0; i < datas.source_size; i++) {
 				u_source[i] = -datas.supply[i];
-				sub_object += u[i] * u_source[i];
-				//subobj += u[i] * u_source[i];
+				subobj += u[i] * u_source[i];
+				partial_subobj+= u[i] * u_source[i];
 			}
 			for (int i = 0; i < datas.demand_size; i++) {
 				v_demand[i] = datas.demand[i];
-				sub_object += v[i] * v_demand[i];
-				//subobj += v[i] * v_demand[i];
+				subobj += v[i] * v_demand[i];
+				partial_subobj+= v[i] * v_demand[i];
 			}
 			for (int i = 0; i < datas.source_size; i++) {
 				for (int j = 0; j < datas.demand_size; j++) {
 					w_M[i][j] = -datas.M[i][j];
-					sub_object+= w_M[i][j] * y_1[i][j] * w[i][j];
-					//subobj += w_M[i][j] * y_1[i][j] * w[i][j];
+					subobj += w_M[i][j] * y_1[i][j] * w[i][j];
 				}
 			}
-			sub_problem.setObjective(sub_object, GRB_MAXIMIZE);
+			sub_problem.setObjective(subobj, GRB_MAXIMIZE);
 			//子问题约束
 			for (int i = 0; i < datas.source_size; i++) {
 				for (int j = 0; j < datas.demand_size; j++) {
@@ -131,30 +130,27 @@ public:
 			while (UB>LB+FUZZ) {
 				//根据松弛的主问题中的 变量y值重置子问题目标函数
 				GRBLinExpr subobj = 0;
-				for (int i = 0; i < datas.source_size; i++) {
+				/*for (int i = 0; i < datas.source_size; i++) {
 					subobj += u_source[i] * u[i];
 				}
 				for (int i = 0; i < datas.demand_size; i++) {
 					subobj += v_demand[i] * v[i];
-				}
+				}*/
 				for (int i = 0; i < datas.source_size; i++) {
 					for (int j = 0; j < datas.demand_size; j++) {
 						subobj += w_M[i][j] * w[i][j] * y_1[i][j];
 					}
 				}
-				sub_problem.setObjective(subobj, GRB_MAXIMIZE);
-				//sub_problem.set(GRB_IntParam_InfUnbdInfo, 1);
+				sub_problem.setObjective(partial_subobj+ subobj, GRB_MAXIMIZE);
 				sub_problem.optimize();
-				for (int i = 0; i < datas.source_size; i++) {
-					for (int j = 0; j < datas.demand_size; j++) {
-						x_num[i][j] = sub_con[i][j].get(GRB_DoubleAttr_Pi);//得到对偶变量pi
-					}
-				}
+				//for (int i = 0; i < datas.source_size; i++) {
+				//	for (int j = 0; j < datas.demand_size; j++) {
+				//		x_num[i][j] = sub_con[i][j].get(GRB_DoubleAttr_Pi);//得到对偶变量pi
+				//	}
+				//}
 				auto status = sub_problem.get(GRB_IntAttr_Status);//得到子问题的求解状态
-				
 				//添加极射线的约束
 				if (status == GRB_UNBOUNDED) {
-
 					GRBLinExpr e = 0;
 					for (int i = 0; i < datas.source_size; i++) {
 						e += u[i].get(GRB_DoubleAttr_UnbdRay)*u_source[i];
@@ -191,7 +187,7 @@ public:
 							sum_cij_fij += datas.fixed_c[i][j] * y_1[i][j];
 						}
 					}
-					cout << "UB " << UB << endl;
+					//cout << "UB " << UB << endl;
 					UB = min(UB, (sum_cij_fij + sub_problem.get(GRB_DoubleAttr_ObjVal)));
 				}
 				else
@@ -201,7 +197,7 @@ public:
 				//求解主问题
 				master.optimize();
 				LB = master.get(GRB_DoubleAttr_ObjVal);
-				cout << "LB:" << LB << endl;
+				//cout << "LB:" << LB << endl;
 				for (int i = 0; i < datas.source_size; i++) {
 					for (int j = 0; j < datas.demand_size; j++) {
 						double aa = y[i][j].get(GRB_DoubleAttr_X);
@@ -223,8 +219,22 @@ public:
 		catch (...) {
 			cout << "error" << endl;
 		}
-		cout << UB << endl;
-		cout << LB << endl;
+		//计算子问题的对偶变量x
+		cout << "Xij" << endl;
+		for (int i = 0; i < datas.source_size; i++) {
+			for (int j = 0; j < datas.demand_size; j++) {
+				cout<<sub_con[i][j].get(GRB_DoubleAttr_Pi)<<"\t";//得到对偶变量pi
+			}
+			cout << endl;
+		}
+		cout << "Yij" << endl;
+		for (int i = 0; i < datas.source_size; i++) {
+			for (int j = 0; j < datas.demand_size; j++) {
+				cout << y[i][j].get(GRB_DoubleAttr_X) << "\t";//得到对偶变量pi
+			}
+			cout << endl;	
+		}
+		cout << "min cost " << LB << endl;
 	}
 };
 
