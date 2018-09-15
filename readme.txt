@@ -1,15 +1,15 @@
-ÒÔ´ø¹Ì¶¨»¨·ÑµÄÔËÊäÎÊÌâÎªÀı£¬ÊµÏÖÁËbenders decomposition
+ä»¥å¸¦å›ºå®šèŠ±è´¹çš„è¿è¾“é—®é¢˜ä¸ºä¾‹ï¼Œå®ç°äº†benders decomposition
 
-	benders decompositionÎª½²Òå
-	´ø¹Ì¶¨»¨·ÑµÄÔËÊäÎª½¨Ä£·½·¨
-	single ÎªÖ±½ÓÇó½âMIPÄ£ĞÍ
-	bender_next ÎªÊµÏÖµÄbenders decomposition
+	benders decompositionä¸ºè®²ä¹‰
+	å¸¦å›ºå®šèŠ±è´¹çš„è¿è¾“ä¸ºå»ºæ¨¡æ–¹æ³•
+	single ä¸ºç›´æ¥æ±‚è§£MIPæ¨¡å‹
+	bender_next ä¸ºå®ç°çš„benders decomposition
 
-Ê¹ÓÃgurobiÇó½âMIP»òIP
+ä½¿ç”¨gurobiæ±‚è§£MIPæˆ–IP
 
 
 
-Êı¾İÊäÈë¸ñÊ½ÈçÏÂ
+æ•°æ®è¾“å…¥æ ¼å¼å¦‚ä¸‹
 
 sources demands
 8	7
@@ -37,7 +37,6 @@ fixed cost
 375   791   720   416   251   887   235 
 
 
-reference ÂÔ
+reference ç•¥
 
 
-¸ÄÍêÀ±¼¦±ÏÉè¼ÌĞø³¢ÊÔÆäËûµÄÎÊÌâ¡£
